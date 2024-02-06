@@ -1,5 +1,5 @@
-"fastapi[all]"
-"uvicorn[standard]"
+fastapi[all]
+uvicorn[standard]
 jinja2
 pydantic
 python-multipart
