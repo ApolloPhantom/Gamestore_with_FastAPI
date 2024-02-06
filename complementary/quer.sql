@@ -1,0 +1,101 @@
+-- SQLite
+--CREATE TABLE users(Id int PRIMARY KEY,Name varchar(100) UNIQUE,Password varchar(20),Recovery int UNIQUE);
+--INSERT INTO users VALUES(1,"Admin","Admin","123");
+--select * from users;
+--drop table object;
+--create table object(Object_ID int PRIMARY KEY,
+--Object_Name varchar(100),
+--Object_type varchar(20),
+--listing varchar(2),
+--rating varchar(1),
+--price int,
+--image_src varchar(1000));
+--insert into object(Object_ID,Object_Name,Object_type,listing,rating,price) values
+--(1,"Eclipseblade","Sword","L","S",100000),
+--(2,"Frostfang","Sword","L","S",200000),
+--(3,"Stormbringer","Sword","L","S",120000),
+--(4,"Soulreaper","Sword","L","S",199000),
+--(5,"Phoenixfire Edge","Sword","L","A",10000),
+--(6,"Shadowmourne","Sword","L","A",20000),
+--(7,"Dawnbreaker","Sword","L","B",2000),
+--(8,"Aetherblade","Sword","L","A",90000),
+--(9,"Dragonspire Blade","Sword","L","S",100000),
+--(10,"Starshard Saber","Sword","L","A",19900),
+--(11,"Frostbiter","Axe","L","A",191900),
+--(12,"Dreadreaper","Axe","L","B",12900),
+--(13,"Molten Maul","Axe","L","B",29900),
+--(14,"Thundercleaver","Axe","L","S",399900),
+--(15,"Venomsplitter","Axe","L","S",400000),
+--(16,"Goliath's Grindstone","Axe","L","S",199000),
+--(17,"Moonshatterer","Axe","L","A",59900),
+--(18,"Runic Hewer","Axe","L","A",69900),
+--(19,"Serpentbite Axe","Axe","L","B",1990),
+--(20,"Voidcleaver","Axe","L","B",9990),
+--(21,"The AXXXE","Axe","L","A",79900),
+--(22,"Aegis of Serenity","Shield","L","B",9900),
+--(23,"Dreadguard Bulwark","Shield","L","B",7900),
+--(24,"Celestial Ward","Shield","L","A",79900),
+--(25,"Emberforge Barrier","Shield","L","S",899900),
+--(26,"Frostward Sentinel","Shield","L","S",799900),
+--(27,"Shadowreaper Scythe","Scythe","L","A",99990),
+--(28,"Soulharvest Crescent","Scythe","L","A",129990),
+--(29,"Celestial Harvest Blade","Scythe","L","B",9990),
+--(30,"Venomspire Gleaner","Scythe","L","S",899990),
+--(31,"Eclipseshard Reaper","Scythe","L","S",999990),
+--(32,"Stoneheart Pick","PickAxe","L","B",8990),
+--(33,"Magmaforged Mattock","PickAxe","L","A",99990),
+--(34,"Celestial Quarrypick","PickAxe","L","A",29990),
+--(35,"Frostbiter Digger","PickAxe","L","S",977990),
+--(36,"Glimmersteel Excavator","PickAxe","L","S",987990),
+--(37,"Thunderstrike Lance","Spear","L","B",7900),
+--(38,"Frostwind Pike","Spear","L","A",79900),
+--(39,"Solarflare Spear","Spear","L","S",99900),
+--(40,"Venomsting Javelin","Spear","L","S",779900),
+--(41,"Dragonfire Glaive","Spear","L","A",89900),
+--(42,"Elixir of Astral Clarity","Potions","L","A",99900),
+--(43,"Draconic Vitality Tonic","Potions","L","B",7990),
+--(44,"Nimbus Nectar","Potions","L","B",6900),
+--(45,"Sylvan Serenity Elixi","Potions","L","S",779900),
+--(46,"Inferno Ignition Brew","Potions","L","S",739900),
+--(47,"Realms of the Eternal Quest","Books","L","S",739900),
+--(48,"Chronicles of the Virtual Realm","Books","L","S",7339900),
+--(49,"The Dice of Destiny","Books","L","A",89900),
+--(50,"Mystic Runes and Enchanted Blades","Books","L","A",99900),
+--(51,"Labyrinth of Shadows","Books","L","A",69900),
+--(52,"Lunar Bloom Essence","Ingredients","L","S",8979900),
+--(53,"Phoenix Ember Resin","Ingredients","L","S",7879900),
+--(54,"Aetheric Crystal Dust","Ingredients","L","S",2479900),
+--(55,"Shadowspore Fungus","Ingredients","L","S",3379900),
+--(56,"Starlight Vein Extract","Ingredients","L","A",79900);
+--create table object_user(Object_ID  int, Id int, PRIMARY KEY (Object_ID,Id));
+--select * from object_user;
+
+--drop TABLE cart;
+--create table cart(Transaction_ID int PRIMARY KEY,
+--Buyer_ID int,
+--Seller_ID int,
+--Object_ID int,
+--Purchase_Status varchar(2));
+
+--CREATE table user_gold(ID int Primary key,Gold int );
+--CREATE table user_bank(Acc_ID varchar(20) PRIMARY KEY,Acc_Password varchar(20),USD int);
+
+--INSERT into user_bank VALUES
+--("1111-2222-3333-4444","Abcde",1000000),
+--("2222-3333-4444-5555","12345",2000),
+--("3333-4444-5555-6666","23232324",40000),
+--("5434-3434-1111-4445","23123123",500);
+
+--select * from user_bank;
+
+--create table user_store(ID int PRIMARY KEY,Funds int,Gold int);
+--insert into user_store VALUES
+--(1,0,0),
+--(2,0,0);
+--select Object_ID from object_user where Id = 1 and Object_ID != (select Object_ID from cart where Seller_ID = 1 and Purchase_Status = "N")
+--update object set listing = "UL" where Object_ID IN (1,5,10);
+--create table object_user1(Object_ID int PRIMARY key,Id int);
+--insert into object_user1(Object_ID,Id) select Object_ID,Id from object_user;
+--drop TABLE object_user;
+--ALTER TABLE object_user1
+--RENAME TO object_user;

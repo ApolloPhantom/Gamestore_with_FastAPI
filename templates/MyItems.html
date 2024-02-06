@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    My Items
+{% endblock %}
+
+{% block main %}
+<div class="container mt-3">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Rating</th>
+          <th>Price in GOLD</th>
+          <th>Cart</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in items %}
+        <tr>
+          <td>{{i[1]}}</td>
+          <td>{{i[4]}}</td>
+          <td>{{i[5]}} G</td>
+          <td>
+            {% if i[3] == "UL"  %}
+            <a href="{{ url_for('unlister_user',ID = i[0])}}" class="btn">
+                List
+            </a>
+            {% else %}
+            Listed
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

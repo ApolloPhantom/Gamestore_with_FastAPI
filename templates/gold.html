@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Gold
+{% endblock %}
+
+{% block main %}
+ <h2>$1 = 2000 G</h2>
+ <h2>Balance= {{ cash }}</h2>
+ <form action="/gold" method="post" >
+    <div class="mb-3">
+        <input class="form-control mx-auto w-auto" id="gold" name="gold" placeholder="USD to Gold" type="number">
+    </div>
+    <button class="btn btn-primary" type="submit">Convert</button>
+</form>
+{% if prompt == 1 %}
+<div class="alert alert-danger alert-dismissible">
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <strong>Error:-</strong>{{ Error }}
+</div>
+{% elif prompt == 2 %}
+<div class="alert alert-success alert-dismissible">
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <strong>Success:-</strong>{{ Error }}
+</div>
+{% else %}
+{% endif %}
+{% endblock %}

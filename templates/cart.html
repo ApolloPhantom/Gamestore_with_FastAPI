@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    List:-
+{% endblock %}
+
+{% block main %}
+<div class="container mt-3">
+    <h2>Press reload after uncarting to see changes</h2>
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Rating</th>
+          <th>Price in GOLD</th>
+          <th>Cart</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in items %}
+        <tr>
+          <td>{{i[1]}}</td>
+          <td>{{i[4]}}</td>
+          <td>{{i[5]}} G </td>
+          <td>
+            <form action = "/uncart" method="post">
+              <input type = "hidden" name="ID" value = "{{ i[0] }}">
+              <input type = "hidden" name="Type" value = "{{ i[2] }}" >
+              <button class="btn btn-outline-secondary" type="submit">
+                Uncart
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+            <td class="border-0 fw-bold text-end" colspan="4">Cash:-</td>
+            <td class="border-0 w-bold text-end">$ {{cash}}</td>
+        </tr>
+        <tr>
+            <td class="border-0 fw-bold text-end" colspan="4">Gold:-</td>
+            <td class="border-0 w-bold text-end">{{cashg}} G</td>
+        </tr>
+    </tfoot>
+    </table>
+  </div>
+  <div class="d-grid gap-3">
+  <form action="/checkout" method="post">
+    <button class= "btn btn-outline-secondary btn-block" type="submit">Confirm Purchase with gold</button>
+  </form>
+  </div>
+  {% if prompt == 1 %}
+<div class="alert alert-danger alert-dismissible">
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <strong>Error:-</strong>{{ Error }}
+</div>
+  {% elif prompt == 2 %}
+<div class="alert alert-success alert-dismissible">
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <strong>Error:-</strong>{{ Error }}
+</div>
+{% else %}
+{% endif %}
+{% endblock %}
