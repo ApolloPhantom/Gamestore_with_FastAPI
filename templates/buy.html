@@ -5,44 +5,81 @@ Home
 {% endblock %}
 
 {% block main %}
-<form action="/buy" method="post">
-    <div class="mb-3">
-        <input autocomplete="off"
-        autofocus class="form-control mx-auto w-auto"
-        id="username" name="accountid"
-        placeholder="ACC_ID"
-        type="text">
+<div class="container mt-5">
+    <form action="/buy" method="post" class="needs-validation" novalidate>
+        <div class="mb-3">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                <input autocomplete="off"
+                       autofocus class="form-control"
+                       id="username" name="accountid"
+                       placeholder="ACC_ID"
+                       type="text" required>
+                <div class="invalid-feedback">Please enter your account ID.</div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input class="form-control"
+                       id="password" name="password"
+                       placeholder="Password"
+                       type="password" required>
+                <div class="invalid-feedback">Please enter your password.</div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input class="form-control"
+                       id="confirmation" name="confirmation"
+                       placeholder="Password (again)"
+                       type="password" required>
+                <div class="invalid-feedback">Please confirm your password.</div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
+                <input class="form-control"
+                       id="amount" name="amount"
+                       placeholder="Amount"
+                       type="number" required>
+                <div class="invalid-feedback">Please enter an amount.</div>
+            </div>
+        </div>
+        <button class="btn btn-primary w-100" type="submit">
+            <i class="fas fa-paper-plane"></i> Transfer
+        </button>
+    </form>
+    {% if prompt == 1 %}
+    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+        <i class="fas fa-exclamation-triangle"></i> <strong>Error:</strong> {{ Error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-    <div class="mb-3">
-        <input class="form-control mx-auto w-auto"
-        id="password" name="password"
-        placeholder="Password"
-        type="password">
+    {% elif prompt == 2 %}
+    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+        <i class="fas fa-check-circle"></i> <strong>Success:</strong> {{ Error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-    <div class="mb-3">
-        <input class="form-control mx-auto w-auto"
-        id="confirmation" name="confirmation"
-        placeholder="password(again)"
-        type="password">
-    </div>
-    <div class="mb-3">
-        <input class="form-control mx-auto w-auto"
-        id="amount" name="amount"
-        placeholder="Amount"
-        type="number">
-    </div>
-    <button class="btn btn-primary" type="submit">Transfer</button>
-</form>
-{% if prompt == 1 %}
-<div class="alert alert-danger alert-dismissible">
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    <strong>Error:-</strong>{{ Error }}
+    {% endif %}
 </div>
-{% elif prompt == 2 %}
-<div class="alert alert-success alert-dismissible">
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    <strong>Success:-</strong>{{ Error }}
-</div>
-{% else %}
-{% endif %}
+
+<script>
+    (function () {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+
+                    form.classList.add('was-validated')
+                }, false)
+            })
+    })()
+</script>
 {% endblock %}

@@ -6,29 +6,29 @@
 
 {% block main %}
 <div class="container mt-3">
-    <table class="table table-hover">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Rating</th>
-          <th>Price in GOLD</th>
-          <th>Cart</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for i in items %}
-        <tr>
-          <td>{{i[1]}}</td>
-          <td>{{i[4]}}</td>
-          <td>{{i[5]}} G</td>
-          <td>
-            <a href="{{ url_for('object_cart',ID = i[0],Type = i[2] )}}" class="btn">
-              Cart
-            </a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
+    <table class="table table-hover table-striped table-bordered" style="background-color: white;">
+        <thead class="thead-dark">
+            <tr>
+                <th>Name</th>
+                <th>Rating</th>
+                <th>Price in GOLD</th>
+                <th>Cart</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in items %}
+            <tr>
+                <td style="background-color: white;">{{ i[1] }}</td>
+                <td style="background-color: white;">{{ i[4] }}</td>
+                <td style="background-color: white;">{{ i[5] }} G</td>
+                <td style="background-color: white;">
+                    <a href="{{ url_for('object_cart', ID=i[0], Type=i[2]) }}" class="btn btn-primary">
+                        <i class="fas fa-cart-plus"></i> Cart
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
-  </div>
+</div>
 {% endblock %}

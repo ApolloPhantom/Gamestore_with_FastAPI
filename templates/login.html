@@ -5,20 +5,51 @@
 {% endblock %}
 
 {% block main %}
-    <form action="/login" method="post">
+<div class="container mt-5">
+    <form action="/login" method="post" class="needs-validation" novalidate>
         <div class="mb-3">
-            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" id="username" name="username" placeholder="Username" type="text">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                <input autocomplete="off" autofocus class="form-control mx-auto w-50" id="username" name="username" placeholder="Username" type="text" required>
+                <div class="invalid-feedback">Please enter your username.</div>
+            </div>
         </div>
         <div class="mb-3">
-            <input class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password" type="password">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input class="form-control mx-auto w-50" id="password" name="password" placeholder="Password" type="password" required>
+                <div class="invalid-feedback">Please enter your password.</div>
+            </div>
         </div>
-        <button class="btn btn-primary" type="submit">Log In</button>
+        <button class="btn btn-primary mx-auto d-block w-50" type="submit">
+            <i class="fas fa-sign-in-alt"></i> Log In
+        </button>
     </form>
     {% if prompt == 1 %}
-    <div class="alert alert-danger alert-dismissible">
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        <strong>Error:-</strong>{{ Error }}
+    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+        <i class="fas fa-exclamation-triangle"></i> <strong>Error:</strong> {{ Error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-    {% else %}
     {% endif %}
+</div>
+
+<script>
+    (function () {
+        'use strict'
+
+        var forms = document.querySelectorAll('.needs-validation')
+
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+
+                    form.classList.add('was-validated')
+                }, false)
+            })
+    })()
+</script>
 {% endblock %}

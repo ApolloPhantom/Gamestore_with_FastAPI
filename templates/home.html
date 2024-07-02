@@ -5,62 +5,121 @@
 {% endblock %}
 
 {% block main %}
-<div class="list-group">
-    <style>
-        a{
-            font-size: x-large;
-            font-weight: bolder;
-        }
-    </style>
-    <a href="/sword" class="list-group-item list-group-item-action">
-        <img src = "/static/sword.gif">
-        Sword
-        <img src = "/static/sword.gif">
-    </a>
-    <a href="/axe" class="list-group-item list-group-item-action">
-        <img src = "/static/axe.gif">
-        Axe
-        <img src = "/static/axe.gif">
-    </a>
-    <a href="/shield" class="list-group-item list-group-item-action">
-        <img src = "/static/shield.gif">
-        Shield
-        <img src = "/static/shield.gif">
-    </a>
-    <a href="/scythe" class="list-group-item list-group-item-action">
-        <img src = "/static/scythe.gif">
-        Scythe
-        <img src = "/static/scythe.gif">
-    </a>
-    <a href="/pickaxe" class="list-group-item list-group-item-action">
-        <img src = "/static/pickaxe.gif">
-        Pickaxe
-        <img src = "/static/pickaxe.gif">
-    </a>
-    <a href="/spear" class="list-group-item list-group-item-action">
-        <img src = "/static/spear.gif">
-        Spear
-        <img src = "/static/spear.gif">
-    </a>
-    <a href="/potions" class="list-group-item list-group-item-action">
-        <img src = "/static/potion.gif">
-        Potions
-        <img src = "/static/potion.gif">
-    </a>
-    <a href="/books" class="list-group-item list-group-item-action">
-        <img src = "/static/book.gif">
-        Books
-        <img src = "/static/book.gif">
-    </a>
-    <a href="/gold" class="list-group-item list-group-item-action">
-        <img src = "/static/gold.gif">
-        Gold
-        <img src = "/static/gold.gif">
-    </a>
-    <a href="/ingredients" class="list-group-item list-group-item-action">
-        <img src = "/static/ingred.gif">
-        Ingredients
-        <img src = "/static/ingred.gif">
-    </a>
+<div class="container mt-4">
+    <div class="row">
+        <style>
+            a {
+                font-size: x-large;
+                font-weight: bolder;
+                text-decoration: none;
+                color: inherit;
+            }
+            .card img {
+                height: 40px;
+                width: 40px;
+                object-fit: cover;
+            }
+        </style>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <a href="/sword" class="list-group-item list-group-item-action">
+                    <i class="fas fa-khanda"></i>
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Sword</h5>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <a href="/axe" class="list-group-item list-group-item-action">
+                    <i class="fas fa-terminal"></i>
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Axe</h5>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <a href="/shield" class="list-group-item list-group-item-action">
+                    <i class="fas fa-shield-alt"></i>
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Shield</h5>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <a href="/scythe" class="list-group-item list-group-item-action">
+                    <i class="fas fa-chevron-up"></i>
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Scythe</h5>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <a href="/pickaxe" class="list-group-item list-group-item-action">
+                    <i class="fas fa-hammer"></i>
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Pickaxe</h5>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <a href="/spear" class="list-group-item list-group-item-action">
+                    <i class="fas fa-pen-fancy"></i>
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Spear</h5>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <a href="/potions" class="list-group-item list-group-item-action">
+                    <i class="fas fa-flask"></i>
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Potions</h5>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <a href="/books" class="list-group-item list-group-item-action">
+                    <i class="fas fa-book"></i>
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Books</h5>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <a href="/gold" class="list-group-item list-group-item-action">
+                    <i class="fas fa-coins"></i>
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Gold</h5>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <a href="/ingredients" class="list-group-item list-group-item-action">
+                    <i class="fas fa-leaf"></i>
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Ingredients</h5>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

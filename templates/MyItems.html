@@ -6,33 +6,37 @@
 
 {% block main %}
 <div class="container mt-3">
-    <table class="table table-hover">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Rating</th>
-          <th>Price in GOLD</th>
-          <th>Cart</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for i in items %}
-        <tr>
-          <td>{{i[1]}}</td>
-          <td>{{i[4]}}</td>
-          <td>{{i[5]}} G</td>
-          <td>
-            {% if i[3] == "UL"  %}
-            <a href="{{ url_for('unlister_user',ID = i[0])}}" class="btn">
-                List
-            </a>
-            {% else %}
-            Listed
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
+    <table class="table table-hover table-striped table-bordered" style="background-color: white;">
+        <thead class="thead-dark">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Rating</th>
+                <th>Price in GOLD</th>
+                <th>Cart</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in items %}
+            <tr>
+                <td style="background-color: white;">{{ i[1] }}</td>
+                <td style="background-color: white;">{{ i[2] }}</td>
+                <td style="background-color: white;">{{ i[4] }}</td>
+                <td style="background-color: white;">{{ i[5] }} G</td>
+                <td style="background-color: white;">
+                    {% if i[3] == "UL" %}
+                    <a href="{{ url_for('lister_user', ID=i[0]) }}" class="btn btn-success">
+                        <i class="fas fa-list"></i> List
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('unlister_user', ID=i[0]) }}" class="btn btn-danger">
+                        <i class="fas fa-times"></i> UnList
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
-  </div>
+</div>
 {% endblock %}

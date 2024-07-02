@@ -251,10 +251,15 @@ def my_unlisted_objects(user):
 def lister_pro_max(ID):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
-    cur.execute("update object set listing = ? where Id = ?",("L",ID,))
+    cur.execute("update object set listing = ? where Object_ID = ?",("L",ID,))
     conn.commit()
 
-    
+def unlister_pro_max(ID):
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute("update object set listing = ? where Object_ID = ?",("UL",ID,))
+    conn.commit()
+       
     
     
     
