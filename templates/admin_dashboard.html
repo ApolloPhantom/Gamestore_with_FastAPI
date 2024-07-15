@@ -1,0 +1,132 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Admin Dashboard
+{% endblock %}
+
+{% block main %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Admin Dashboard</h1>
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title"><i class="fas fa-database"></i> Execute SQL Command</h4>
+                </div>
+                <div class="card-body">
+                    <form id="sql-form">
+                        <div class="mb-3">
+                            <label for="sql-command" class="form-label">SQL Command</label>
+                            <textarea class="form-control" id="sql-command" rows="3" placeholder="Enter SQL command here..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">Execute</button>
+                    </form>
+                    <div id="sql-result" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title"><i class="fas fa-star"></i> Number of Items per Rating</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="itemsPerRatingChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title"><i class="fas fa-dollar-sign"></i> Average Price per Rating</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="avgPricePerRatingChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title"><i class="fas fa-tags"></i> Average Price per Category</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="avgPricePerCategoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title"><i class="fas fa-trophy"></i> Player Wealth Leaderboard</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="playerWealthLeaderboardChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        function fetchData(url, callback) {
+            fetch(url)
+                .then(response => response.json())
+                .then(data => callback(data))
+                .catch(error => console.error('Error:', error));
+        }
+
+        function renderChart(chartId, chartType, labels, datasets, chartLabel) {
+            const ctx = document.getElementById(chartId).getContext('2d');
+            new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: chartLabel,
+                        data: datasets,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        fetchData("/admin/items-per-rating", data => renderChart('itemsPerRatingChart', 'bar', data.ratings, data.counts, 'Count'));
+        fetchData("/admin/avg-price-per-rating", data => renderChart('avgPricePerRatingChart', 'bar', data.ratings, data.avgPrices, 'Average Price'));
+        fetchData("/admin/avg-price-per-category", data => renderChart('avgPricePerCategoryChart', 'bar', data.categories, data.avgPrices, 'Average Price'));
+        fetchData("/admin/player-wealth-leaderboard", data => renderChart('playerWealthLeaderboardChart', 'bar', data.players, data.wealth, 'Wealth'));
+
+        document.getElementById('sql-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const sqlCommand = document.getElementById('sql-command').value;
+            fetch('/admin/execute-sql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ command: sqlCommand })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('sql-result');
+                if (data.status === 'success') {
+                    resultDiv.innerHTML = '<div class="alert alert-success"><pre>' + JSON.stringify(data.result, null, 2) + '</pre></div>';
+                } else {
+                    resultDiv.innerHTML = '<div class="alert alert-danger">' + data.result + '</div>';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

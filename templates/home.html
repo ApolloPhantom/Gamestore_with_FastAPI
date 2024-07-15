@@ -8,114 +8,131 @@
 <div class="container mt-4">
     <div class="row">
         <style>
+            .card {
+                border: none;
+                transition: transform 0.3s, box-shadow 0.3s;
+            }
+            .card:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            }
+            .card-body {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            .card-icon {
+                font-size: 4rem;
+                color: #f39c12;
+            }
+            .card-title {
+                margin-top: 1rem;
+                font-size: 1.5rem;
+                font-weight: bold;
+            }
             a {
-                font-size: x-large;
-                font-weight: bolder;
                 text-decoration: none;
                 color: inherit;
             }
-            .card img {
-                height: 40px;
-                width: 40px;
-                object-fit: cover;
-            }
         </style>
+
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <a href="/sword" class="list-group-item list-group-item-action">
-                    <i class="fas fa-khanda"></i>
+            <div class="card bg-white p-3 rounded shadow-sm">
+                <a href="/item/sword" class="list-group-item list-group-item-action">
+                    <i class="fas fa-khanda card-icon"></i>
                     <div class="card-body">
-                        <h5 class="card-title text-center">Sword</h5>
+                        <h5 class="card-title">Sword</h5>
                     </div>
                 </a>
             </div>
         </div>
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <a href="/axe" class="list-group-item list-group-item-action">
-                    <i class="fas fa-terminal"></i>
+            <div class="card bg-white p-3 rounded shadow-sm">
+                <a href="/item/axe" class="list-group-item list-group-item-action">
+                    <i class="fas fa-terminal card-icon"></i>
                     <div class="card-body">
-                        <h5 class="card-title text-center">Axe</h5>
+                        <h5 class="card-title">Axe</h5>
                     </div>
                 </a>
             </div>
         </div>
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <a href="/shield" class="list-group-item list-group-item-action">
-                    <i class="fas fa-shield-alt"></i>
+            <div class="card bg-white p-3 rounded shadow-sm">
+                <a href="/item/shield" class="list-group-item list-group-item-action">
+                    <i class="fas fa-shield-alt card-icon"></i>
                     <div class="card-body">
-                        <h5 class="card-title text-center">Shield</h5>
+                        <h5 class="card-title">Shield</h5>
                     </div>
                 </a>
             </div>
         </div>
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <a href="/scythe" class="list-group-item list-group-item-action">
-                    <i class="fas fa-chevron-up"></i>
+            <div class="card bg-white p-3 rounded shadow-sm">
+                <a href="/item/scythe" class="list-group-item list-group-item-action">
+                    <i class="fas fa-chevron-up card-icon"></i>
                     <div class="card-body">
-                        <h5 class="card-title text-center">Scythe</h5>
+                        <h5 class="card-title">Scythe</h5>
                     </div>
                 </a>
             </div>
         </div>
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <a href="/pickaxe" class="list-group-item list-group-item-action">
-                    <i class="fas fa-hammer"></i>
+            <div class="card bg-white p-3 rounded shadow-sm">
+                <a href="/item/pickaxe" class="list-group-item list-group-item-action">
+                    <i class="fas fa-hammer card-icon"></i>
                     <div class="card-body">
-                        <h5 class="card-title text-center">Pickaxe</h5>
+                        <h5 class="card-title">Pickaxe</h5>
                     </div>
                 </a>
             </div>
         </div>
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <a href="/spear" class="list-group-item list-group-item-action">
-                    <i class="fas fa-pen-fancy"></i>
+            <div class="card bg-white p-3 rounded shadow-sm">
+                <a href="/item/spear" class="list-group-item list-group-item-action">
+                    <i class="fas fa-pen-fancy card-icon"></i>
                     <div class="card-body">
-                        <h5 class="card-title text-center">Spear</h5>
+                        <h5 class="card-title">Spear</h5>
                     </div>
                 </a>
             </div>
         </div>
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <a href="/potions" class="list-group-item list-group-item-action">
-                    <i class="fas fa-flask"></i>
+            <div class="card bg-white p-3 rounded shadow-sm">
+                <a href="/item/potions" class="list-group-item list-group-item-action">
+                    <i class="fas fa-flask card-icon"></i>
                     <div class="card-body">
-                        <h5 class="card-title text-center">Potions</h5>
+                        <h5 class="card-title">Potions</h5>
                     </div>
                 </a>
             </div>
         </div>
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <a href="/books" class="list-group-item list-group-item-action">
-                    <i class="fas fa-book"></i>
+            <div class="card bg-white p-3 rounded shadow-sm">
+                <a href="/item/books" class="list-group-item list-group-item-action">
+                    <i class="fas fa-book card-icon"></i>
                     <div class="card-body">
-                        <h5 class="card-title text-center">Books</h5>
+                        <h5 class="card-title">Books</h5>
                     </div>
                 </a>
             </div>
         </div>
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <a href="/gold" class="list-group-item list-group-item-action">
-                    <i class="fas fa-coins"></i>
+            <div class="card bg-white p-3 rounded shadow-sm">
+                <a href="/item/gold" class="list-group-item list-group-item-action">
+                    <i class="fas fa-coins card-icon"></i>
                     <div class="card-body">
-                        <h5 class="card-title text-center">Gold</h5>
+                        <h5 class="card-title">Gold</h5>
                     </div>
                 </a>
             </div>
         </div>
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <a href="/ingredients" class="list-group-item list-group-item-action">
-                    <i class="fas fa-leaf"></i>
+            <div class="card bg-white p-3 rounded shadow-sm">
+                <a href="/item/ingredients" class="list-group-item list-group-item-action">
+                    <i class="fas fa-leaf card-icon"></i>
                     <div class="card-body">
-                        <h5 class="card-title text-center">Ingredients</h5>
+                        <h5 class="card-title">Ingredients</h5>
                     </div>
                 </a>
             </div>

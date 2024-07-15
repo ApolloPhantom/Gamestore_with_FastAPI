@@ -1,98 +1,19 @@
-# import os
-# from fastapi import *
-# from fastapi.templating import Jinja2Templates
-# from fastapi.responses import HTMLResponse,RedirectResponse
-# from fastapi.staticfiles import StaticFiles
-# from fastapi.middleware.cors import CORSMiddleware
-# from complementary.sql_connectors import *
-# from functools import wraps
-
-
-# base_path = os.path.dirname(os.path.abspath(__file__))
-# stat = "static"
-# stat_path = os.path.join(base_path,stat) 
-# app = FastAPI()
-# app.mount("/static", StaticFiles(directory=stat_path), name="static")
-# templates = Jinja2Templates(directory="templates")
-# user = None  #contains an integer ID
-
-
-# @app.middleware("http")
-# async def add_no_cache_headers(request: Request, call_next):
-#     response = await call_next(request)
-#     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-#     response.headers["Expires"] = "0"
-#     response.headers["Pragma"] = "no-cache"
-    
-#     return response
-
-
-# def login_required(f):
-#     @wraps(f)
-#     async def wrapper(*args, **kwargs):
-#         global user
-#         if  login_checker(user) == False:
-#             raise HTTPException(
-#                 status_code=status.HTTP_401_UNAUTHORIZED,
-#                 detail="You are not logged in"
-#             )
-#         return await f(*args, **kwargs)
-#     return wrapper
-
-# @app.get("/",response_class=HTMLResponse)
-# async def home(request : Request):
-#     return templates.TemplateResponse("home.html",{"request":request,"user":user})
-
-
-# @app.get("/login")
-# async def login_get(request : Request):
-#     prompt = 0
-#     return templates.TemplateResponse("login.html",{"request":request,"prompt":prompt})
-
-# @app.post("/login")
-# async def login_post(request : Request,username : str = Form(), password : str = Form()):
-#     u = login_verifier(username,password)
-#     if u == None:
-#         prompt = 1
-#         er = "You have given credentials or user does not exist"
-#         return templates.TemplateResponse("login.html",{"request":request,"prompt":prompt,"Error":er,"user":None})
-#     else:
-#         global user
-#         user = u
-#         return templates.TemplateResponse("home.html",{"request":request,"user":user})
-    
-# @app.get("/logout")
-# async def logout(request : Request):
-#     global user
-#     user = None
-#     return RedirectResponse(url="/")
-
-
-# @app.get("/register")
-# async def reg_get(request : Request):
-    
-#     return templates.TemplateResponse("register.html",{"request":request,"prompt":0,"user":user})
-
-# @app.post("/register")
-# async def reg_get(request : Request,username : str = Form(), password : str = Form(),confirmation : str = Form()):
-#     er = register_helper(username,password,confirmation)
-#     global user
-#     user = login_verifier(username,password)
-#     if len(er) != 0:
-#         return templates.TemplateResponse("register.html",{"request":request,"prompt":2,"Error":er,"user":user})
-#     else:
-#         return templates.TemplateResponse("home.html",{"request":request,"user":user})
-
 import os
 from fastapi import *
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse,JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from complementary.sql_connectors import *
 from functools import wraps
 from itsdangerous import Signer
+from pydantic import BaseModel
+from datetime import datetime, timedelta
+import asyncio
+import aiofiles
+from pathlib import Path
+
 
 # Configuration
 SECRET_KEY = "your_secret_key"  # Replace with your own secret key
@@ -125,13 +46,14 @@ def login_required(f):
         return await f(request, *args, **kwargs)
     return wrapper
 
-@app.get("/", response_class=HTMLResponse)
+@app.route("/",methods=["GET", "POST"])
 async def home(request: Request):
     user = request.session.get("user")
     if user is None:
         L = [0,0]
     else:
         L = balance_checker(user)
+        L = list(L[0])
     return templates.TemplateResponse("home.html", {"request": request, "user": user,"cash":L[0],"cashG":L[1]})
 
 @app.get("/login", response_class=HTMLResponse)
@@ -139,7 +61,7 @@ async def login_get(request: Request):
     prompt = 0
     return templates.TemplateResponse("login.html", {"request": request, "prompt": prompt})
 
-@app.post("/login")
+@app.post("/login",response_class=[HTMLResponse, RedirectResponse])
 async def login_post(request: Request, username: str = Form(), password: str = Form()):
     u = login_verifier(username, password)
     if u is None:
@@ -148,12 +70,12 @@ async def login_post(request: Request, username: str = Form(), password: str = F
         return templates.TemplateResponse("login.html", {"request": request, "prompt": prompt, "Error": er, "user": None})
     else:
         request.session["user"] = u
-        return templates.TemplateResponse("home.html", {"request": request, "user": u})
+        return RedirectResponse(url="/")
 
 @app.get("/logout")
 async def logout(request: Request):
     request.session.pop("user", None)
-    return RedirectResponse(url="/")
+    return RedirectResponse(url="/",status_code=302)
 
 @app.get("/register", response_class=HTMLResponse)
 async def reg_get(request: Request):
@@ -167,228 +89,482 @@ async def reg_post(request: Request, username: str = Form(), password: str = For
         return templates.TemplateResponse("register.html", {"request": request, "prompt": 2, "Error": er, "user": None})
     else:
         request.session["user"] = login_verifier(username, password)
-        return templates.TemplateResponse("home.html", {"request": request, "user": request.session.get("user")})
+        return RedirectResponse(url="/",status_code=302)
         
-@app.get("/sword")
-@login_required
-async def sword(request : Request):
+categories = ["sword", "axe", "scythe", "shield", "pickaxe", "spear", "potions", "books", "ingredients","gold"]
+@app.get("/item/{category}", response_class=HTMLResponse)
+async def get_category_items(request: Request, category: str):
+    if category not in categories:
+        return HTMLResponse(content="Category not found", status_code=404)
+    
     user = request.session.get("user")
-    items = listed_object_data_generator("Sword")
-    return templates.TemplateResponse("sword.html",{"request":request,"items":items,"user":user})
+    items = listed_object_data_generator(category)
+    L = balance_checker(user)
+    L = list(L[0])
+    if category == "gold":
+        return RedirectResponse("/gold")
+    context = {
+        "request": request,
+        "items": items,
+        "user": user,
+        "cash": L[0],
+        "cashG": L[1]
+    } 
+    return templates.TemplateResponse(f"{category}.html", context)
 
-@app.get("/axe")
+@app.post("/CCart/{ID}/{Type}")
 @login_required
-async def axe(request : Request):
+async def object_cart(request: Request, ID: int, Type: str):
     user = request.session.get("user")
-    items = listed_object_data_generator("Axe")
-    return templates.TemplateResponse("axe.html",{"request":request,"items":items,"user":user})
-
-@app.get("/scythe")
-@login_required
-async def scythe(request : Request):
-    user = request.session.get("user")
-    items = listed_object_data_generator("Scythe")
-    return templates.TemplateResponse("scythe.html",{"request":request,"items":items,"user":user})
-
-@app.get("/shield")
-@login_required
-async def shield(request : Request):
-    user = request.session.get("user")
-    items = listed_object_data_generator("Shield")
-    return templates.TemplateResponse("shield.html",{"request":request,"items":items,"user":user})
-
-@app.get("/pickaxe")
-@login_required
-async def pickaxe(request : Request):
-    user = request.session.get("user")
-    items = listed_object_data_generator("Pickaxe")
-    return templates.TemplateResponse("pickaxe.html",{"request":request,"items":items,"user":user})
-
-@app.get("/spear")
-@login_required
-async def spear(request : Request):
-    user = request.session.get("user")
-    items = listed_object_data_generator("Spear")
-    return templates.TemplateResponse("spear.html",{"request":request,"items":items,"user":user})
-
-@app.get("/potions")
-@login_required
-async def potions(request : Request):
-    user = request.session.get("user")
-    items = listed_object_data_generator("Potions")
-    return templates.TemplateResponse("potions.html",{"request":request,"items":items,"user":user})
-
-@app.get("/books")
-@login_required
-async def sword(request : Request):
-    user = request.session.get("user")
-    items = listed_object_data_generator("Books")
-    return templates.TemplateResponse("books.html",{"request":request,"items":items,"user":user})
-
-@app.get("/ingredients")
-@login_required
-async def ingredients(request : Request):
-    user = request.session.get("user")
-    items = listed_object_data_generator("Ingredients")
-    return templates.TemplateResponse("ingredients.html",{"request":request,"items":items,"user":user})
-
-@app.get("/CCart/{ID}/{Type}")
-@login_required
-async def object_cart(request : Request, ID : int,Type : str):
-    user = request.session.get("user")
-    t = object_unlister_and_cart_filler(ID,user)
-    if t == False:
-        raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="You cannot buy your own item."
-            ) 
+    t = object_unlister_and_cart_filler(ID, user)
+    if t==0:
+        return JSONResponse(content={"error": "You cannot buy your own item."}, status_code=status.HTTP_401_UNAUTHORIZED)
+    elif t==1:
+        return JSONResponse(content={"error": "Carting failed, reload and try again."}, status_code=status.HTTP_401_UNAUTHORIZED)
+    
     items = listed_object_data_generator(Type)
-    return templates.TemplateResponse(Type.lower() + ".html",{"request":request,"items":items,"user":user})
+    return JSONResponse(content={"items": items, "user": user})
 
-@app.get("/cart")
+
+@app.post("/buy", response_class=HTMLResponse)
 @login_required
-async def cart(request : Request):
+async def buy(request: Request, accountid: str = Form(), password: str = Form(), confirmation: str = Form(), amount: int = Form()):
     user = request.session.get("user")
-    items = cart_lister(user)
-    price_G = total_price(items)
-    price = price_G//2000    
-    return templates.TemplateResponse("cart.html",{"request":request,"items":items,"user":user,"cash":price,"cashg":price_G})
-
-
-@app.post("/uncart",response_class= HTMLResponse)
-@login_required
-async def uncart(request : Request,ID : int = Form() , Type : str =  Form()):
-    uncarter(ID)
-    user = request.session.get("user")
-    items = cart_lister(user)
-    price_G = total_price(items)
-    price = price_G//2000
-    er = "Uncarted Successfully"    
-    return templates.TemplateResponse("cart.html",{"request":request,"items":items,"user":user,"cash":price,"cashG":price_G,"prompt":2,"Error":er})
-    
-
-@app.post("/buy",response_class=HTMLResponse)
-@login_required
-async def buy(request : Request,accountid : str = Form(),password : str = Form(),confirmation : str = Form(),amount : int = Form()):
-    user = request.session.get("user")
-    if bank_confirm(accountid) == False:
+    L = balance_checker(user)
+    L = list(L[0]) 
+    if not bank_confirm(accountid):
         er = "Wrong Account ID or Account does not exist"
-        return templates.TemplateResponse("buy.html",{"request":request,"user":user,"prompt":1,"Error":er})
-    
-    if bank_withdrawer(user,accountid,password,amount) == False:
-         er = "Insufficient money in your account"
-         return templates.TemplateResponse("buy.html",{"request":request,"user":user,"prompt":1,"Error":er})
+        return templates.TemplateResponse("buy.html", {"request": request, "user": user, "prompt": 1, "Error": er, "cash": L[0], "cashG": L[1]})
+    if password != confirmation:
+        er = "Password and Confirmation do not match"
+        return templates.TemplateResponse("buy.html", {"request": request, "user": user, "prompt": 1, "Error": er, "cash": L[0], "cashG": L[1]})
+    if not bank_withdrawer(user, accountid, password, amount):
+        er = "Insufficient money in your account"
+        return templates.TemplateResponse("buy.html", {"request": request, "user": user, "prompt": 1, "Error": er, "cash": L[0], "cashG": L[1]})
     else:
-        er = "Funds added , go to balance to check"
-        return templates.TemplateResponse("buy.html",{"request":request,"user":user,"prompt":2,"Error":er})
+        er = "Funds added, go to balance to check"
+        return templates.TemplateResponse("buy.html", {"request": request, "user": user, "prompt": 2, "Error": er, "cash": L[0], "cashG": L[1]})
 
 @app.get("/buy",response_class=HTMLResponse)
 @login_required
 async def buy_g(request : Request):
     user = request.session.get("user")
-    return templates.TemplateResponse("buy.html",{"request":request,"user":user,"prompt":0})
+    L = balance_checker(user)
+    L = list(L[0]) 
+    return templates.TemplateResponse("buy.html",{"request":request,"user":user,"prompt":0,"cash":L[0],"cashG":L[1]})
     
 
-# @app.get("/balance")
+# @app.post("/changepassword",response_class=HTMLResponse)
 # @login_required
-# async def balance(request : Request):
+# async def changepassword(request : Request,cpassword : str = Form(),password : str = Form(),confirmation : str = Form()):
 #     user = request.session.get("user")
 #     L = balance_checker(user)
-#     return templates.TemplateResponse("balance.html",{"request":request,"user":user,"cash":L[0],"cashG":L[1]})
-
-
-@app.post("/changepassword",response_class=HTMLResponse)
-@login_required
-async def changepassword(request : Request,cpassword : str = Form(),password : str = Form(),confirmation : str = Form()):
-    user = request.session.get("user")
-    if password_verifier(user,cpassword) == False:
-        er = "Your password is wrong"
-        return templates.TemplateResponse("changepassword.html",{"request":request,"user":user,"Error":er,"prompt":1})
+#     L = list(L[0]) 
+#     if password_verifier(user,cpassword) == False:
+#         er = "Your password is wrong"
+#         return templates.TemplateResponse("changepassword.html",{"request":request,"user":user,"Error":er,"prompt":1,"cash":L[0],"cashG":L[1]})
     
-    if password != confirmation:
-        er = "Password and Confirmation do not match"
-        return templates.TemplateResponse("changepassword.html",{"request":request,"user":user,"Error":er,"prompt":1}) 
+#     if password != confirmation:
+#         er = "Password and Confirmation do not match"
+#         return templates.TemplateResponse("changepassword.html",{"request":request,"user":user,"Error":er,"prompt":1,"cash":L[0],"cashG":L[1]}) 
     
-    if len(password) == 0 or len(confirmation) == 0:
-        er = "Password and Confirmation are Empty"
-        return templates.TemplateResponse("changepassword.html",{"request":request,"user":user,"Error":er,"prompt":1}) 
+#     if len(password) == 0 or len(confirmation) == 0:
+#         er = "Password and Confirmation are Empty"
+#         return templates.TemplateResponse("changepassword.html",{"request":request,"user":user,"Error":er,"prompt":1,"cash":L[0],"cashG":L[1]}) 
     
-    password_modifier(user,password)
+#     password_modifier(user,password)
     
-@app.get("/changepassword",response_class=HTMLResponse)
-@login_required
-async def changepassword_get(request : Request):
-    user = request.session.get("user")
-    return templates.TemplateResponse("changepassword.html",{"request":request,"user":user,"prompt":0})
-
+# @app.get("/changepassword",response_class=HTMLResponse)
+# @login_required
+# async def changepassword_get(request : Request):
+#     user = request.session.get("user")
+#     L = balance_checker(user)
+#     L = list(L[0]) 
+#     return templates.TemplateResponse("changepassword.html",{"request":request,"user":user,"prompt":0,"cash":L[0],"cashG":L[1]})
 
 @app.get("/gold",response_class=HTMLResponse)
 @login_required
 async def gold_get(request : Request):
     user = request.session.get("user")
-    c = balance_checker(user)
-    return templates.TemplateResponse("gold.html",{"request":request,"user":user,"prompt":0,"cash":c[0]})
+    L = balance_checker(user)
+    L = list(L[0]) 
+    modifier = mean_gold()
+    print(mean_gold)
+    return templates.TemplateResponse("gold.html",{"request":request,"modifier":modifier,"user":user,"prompt":0,"cash":L[0],"cashG":L[1]})
                                         
 
 @app.post("/gold",response_class=HTMLResponse)
 @login_required
 async def gold_get(request : Request,gold : int = Form()):
     user = request.session.get("user")
-    c = balance_checker(user)
-    c = c[0]
+    L = balance_checker(user)
+    L = list(L[0]) 
+    c = L[0]
+    modifier = mean_gold()
     if gold > c:
         er = "Invalid Amount"
-        return templates.TemplateResponse("gold.html",{"request":request,"user":user,"prompt":1,"cash":c,"Error":er})
-        
-    gold_extractor(user,gold)
+        return templates.TemplateResponse("gold.html",{"request":request,"user":user,"prompt":1,"cash":c,"cashG":L[1],"Error":er,"modifier":modifier})
+    
+    gold_extractor(user,gold,modifier)
     f = gold*2000
-    er = "Successfully added" + str(f) + "gold"
-    c = balance_checker(user)
-    c = c[0]
-    return templates.TemplateResponse("gold.html",{"request":request,"user":user,"prompt":2,"cash":c,"Error":er})
+    er = "Successfully added  " + str(f) + "  gold"
+    L = balance_checker(user)
+    L = list(L[0]) 
+    c = L[0]
+    return templates.TemplateResponse("gold.html",{"request":request,"user":user,"prompt":2,"cash":c,"Error":er,"cashG":L[1],"modifier":modifier})
 
+class ItemData(BaseModel):
+    ID: int
+    Type: str
 
-@app.post("/checkout",response_class=HTMLResponse)
+def render_cart_items(items):
+    items_html = ""
+    for i in items:
+        items_html += f"""
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <img src="{i[3]}" class="card-img-top" alt="{i[1]}">
+                <div class="card-body">
+                    <h5 class="card-title">{i[1]}</h5>
+                    <p class="card-text">
+                        <strong>Rating:</strong> {i[4]}<br>
+                        <strong>Price:</strong> {i[5]} G
+                    </p>
+                    <button class="btn btn-danger btn-block uncart-btn" data-id="{i[0]}" data-type="{i[2]}">
+                        <i class="fas fa-times"></i> Uncart
+                    </button>
+                </div>
+            </div>
+        </div>
+        """
+    return items_html
+
+@app.post("/checkout", response_class=JSONResponse)
 @login_required
-async def checkout(request : Request):
+async def checkout(request: Request):
     user = request.session.get("user")
     items = cart_lister(user)
     price_G = total_price(items)
-    price = price_G//2000  
-    L = balance_checker(user)
-    user_g = L[1]
-    user_c = L[0]
+    user_balance = balance_checker(user)
+    user_balance = list(user_balance[0])
+    user_g = user_balance[1]
     if price_G > user_g:
-        er = "Insufficient Balance"
-        return templates.TemplateResponse("cart.html",{"request":request,"items":items,"user":user,"cash":price,"cashG":price_G,"prompt":1,"Error":er})
-    purchase(user,items,user_g - price_G)
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"error": "Insufficient Balance"}
+        )
+    if purchase(user, items, user_g - price_G) == False:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"error": "Purchase Failed"}
+        )
     items = cart_lister(user)
-    er = "Purchase Successful"
     price_G = total_price(items)
-    price = price_G//2000  
-    return templates.TemplateResponse("cart.html",{"request":request,"items":items,"user":user,"cash":price,"cashG":price_G,"prompt":2,"Error":er})
+    return JSONResponse(content={
+        "message": "Purchase Successful",
+        "items_html": render_cart_items(items),
+        "cashg": price_G
+    })
 
+@app.post("/uncart", response_class=JSONResponse)
+@login_required
+async def uncart(request: Request, item_data: ItemData):
+    uncarter(item_data.ID)
+    user = request.session.get("user")
+    items = cart_lister(user)
+    price_G = total_price(items)
+    return JSONResponse(content={
+        "message": "Uncarted Successfully",
+        "items_html": render_cart_items(items),
+        "cashg": price_G
+    })
+
+@app.get("/cart", response_class=HTMLResponse)
+@login_required
+async def cart(request: Request):
+    user = request.session.get("user")
+    items = cart_lister(user)
+    price_G = total_price(items)
+    user_balance = balance_checker(user)
+    user_balance = list(user_balance[0])
+    return templates.TemplateResponse("cart.html", {
+        "request": request,
+        "items": items,
+        "cashg": price_G,
+        "cash": user_balance[0],
+        "cashG": user_balance[1],
+        "user": user
+    })
+
+@app.get("/cart-data", response_class=JSONResponse)
+@login_required
+async def cart_data(request: Request):
+    user = request.session.get("user")
+    items = cart_lister(user)
+    price_G = total_price(items)
+    return JSONResponse(content={
+        "items_html": render_cart_items(items),
+        "cashg": price_G
+    })
 
 @app.get("/objs")
 @login_required
-async def my_items_get(request : Request):
+async def my_items_get(request: Request):
     user = request.session.get("user")
     items = my_unlisted_objects(user)
-    return templates.TemplateResponse("MyItems.html",{"request":request,"user":user,"items":items})
+    L = balance_checker(user)
+    L = list(L[0])
 
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JSONResponse({"items": items, "cash": L[0], "cashG": L[1]})
+    
+    return templates.TemplateResponse("MyItems.html", {"request": request, "user": user, "items": items, "cash": L[0], "cashG": L[1]})
 
-@app.get("/list/{ID}")
+@app.post("/list/{ID}")
 @login_required
-async def lister_user(request : Request,ID :int):
+async def lister_user(request: Request, ID: int):
     user = request.session.get("user")
     lister_pro_max(ID)
     items = my_unlisted_objects(user)
-    return templates.TemplateResponse("MyItems.html",{"request":request,"user":user,"items":items})
+    L = balance_checker(user)
+    L = list(L[0])
 
-@app.get("/unlist/{ID}")
+    return JSONResponse({"items": items, "cash": L[0], "cashG": L[1]})
+
+@app.post("/unlist/{ID}")
 @login_required
-async def unlister_user(request : Request,ID :int):
+async def unlister_user(request: Request, ID: int):
     user = request.session.get("user")
     unlister_pro_max(ID)
     items = my_unlisted_objects(user)
-    return templates.TemplateResponse("MyItems.html",{"request":request,"user":user,"items":items})
+    L = balance_checker(user)
+    L = list(L[0])
+
+    return JSONResponse({"items": items, "cash": L[0], "cashG": L[1]})
+
+@app.post("/scatter/{ID}")
+@login_required
+async def scatter_purge(request: Request, ID: int):
+    u_id = request.session.get("user")
+    if u_id == 1:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"error": "Admin should not purge items"}
+        )
+    purger(ID, u_id)
+    items = my_unlisted_objects(u_id)
+    L = balance_checker(u_id)
+    L = list(L[0])
+
+    return JSONResponse({"items": items, "cash": L[0], "cashG": L[1]})
+
+
+# @app.get("/admin", response_class=HTMLResponse)
+# async def admin_dashboard(request: Request):
+#     user = request.session.get("user")
+#     L = balance_checker(user)
+#     L = list(L[0])
+#     return templates.TemplateResponse("admin_dashboard.html", {"request": request, "user": user, "cash": L[0], "cashG": L[1]})
+
+# @app.post("/admin/execute-sql")
+# async def execute_sql(request: Request):
+#     body = await request.json()
+#     command = body.get("command")
+#     result = execute_sql_command(command)
+#     return JSONResponse(result)
+
+# @app.get("/admin/category-count-data")
+# async def category_count_data(request: Request):
+#     data = get_category_count_data()
+#     categories = [row["Object_type"] for row in data]
+#     counts = [row["count"] for row in data]
+#     return {"categories": categories, "counts": counts}
+
+# @app.get("/admin/cumulative-data")
+# async def cumulative_data(request: Request):
+#     data = get_cumulative_data()
+#     dates = [row["Purchase_Date"] for row in data]
+#     prices = [row["Total_Price"] for row in data]
+#     cumulative_prices = []
+#     cumulative_sum = 0
+#     for price in prices:
+#         cumulative_sum += price
+#         cumulative_prices.append(cumulative_sum)
+#     return {"dates": dates, "cumulativePrices": cumulative_prices}
+
+# @app.get("/admin/last7days-data")
+# async def last7days_data(request: Request):
+#     data = get_last7days_data()
+#     dates = [row["Purchase_Date"] for row in data]
+#     prices = [row["Total_Price"] for row in data]
+#     return {"dates": dates, "prices": prices}
+
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_dashboard(request: Request):
+    user = request.session.get("user")
+    L = balance_checker(user)
+    L = list(L[0])
+    return templates.TemplateResponse("admin_dashboard.html", {"request": request, "user": user, "cash": L[0], "cashG": L[1]})
+
+@app.post("/admin/execute-sql")
+async def execute_sql(request: Request):
+    body = await request.json()
+    command = body.get("command")
+    result = execute_sql_command(command)
+    return JSONResponse(result)
+
+@app.get("/admin/items-per-rating")
+async def items_per_rating(request: Request):
+    data = get_items_per_rating_data()
+    print(data)
+    ratings = [row["rating"] for row in data]
+    counts = [row["count"] for row in data]
+    return {"ratings": ratings, "counts": counts}
+
+@app.get("/admin/avg-price-per-rating")
+async def avg_price_per_rating(request: Request):
+    data = get_avg_price_per_rating_data()
+    ratings = [row["rating"] for row in data]
+    avgPrices = [row["avg_price"] for row in data]
+    return {"ratings": ratings, "avgPrices": avgPrices}
+
+@app.get("/admin/avg-price-per-category")
+async def avg_price_per_category(request: Request):
+    data = get_avg_price_per_category_data()
+    categories = [row["Object_type"] for row in data]
+    avgPrices = [row["avg_price"] for row in data]
+    return {"categories": categories, "avgPrices": avgPrices}
+
+@app.get("/admin/player-wealth-leaderboard")
+async def player_wealth_leaderboard(request: Request):
+    data = get_player_wealth_leaderboard_data()
+    players = [row["Name"] for row in data]
+    wealth = [row["wealth"] for row in data]
+    return {"players": players, "wealth": wealth}
+
+@app.get("/lottery-wheel", response_class=HTMLResponse)
+async def read_root(request: Request):
+    user = request.session.get("user")
+    L = balance_checker(user)
+    L = list(L[0])
+    modifier = mean_gold()
+    return templates.TemplateResponse("wheel.html", {"request": request, "user": user, "cash": L[0], "cashG": L[1],"modifier": modifier})
+
+@app.post("/select_random")
+async def select_random(request: Request):
+    user = request.session.get("user")
+    L = balance_checker(user)
+    L = list(L[0])
+    objects = generate_objects(10)
+    selected_object = random.choice(objects)
+    modifier = mean_gold()
+    if L[1] < modifier:
+        return JSONResponse(content={"error": "Insufficient Gold","selected_object": None, "objects": None})
+    conn = get_db_connection()
+    conn.execute("update user_store set Gold = Gold - ? where ID = ? ",(modifier,user))
+    conn.commit()
+    conn.close()
+    insert_object_and_user(selected_object,user)
+    return {"selected_object": selected_object, "objects": objects}
+
+@app.post("/select_random_10")
+async def select_random_10(request: Request):
+    user = request.session.get("user")
+    L = balance_checker(user)
+    L = list(L[0])
+    objects = generate_objects(100)
+    selected_objects = random.sample(objects, 10)
+    modifier = mean_gold()*9
+    if L[1] < modifier:
+        return JSONResponse(content={"error": "Insufficient Gold","selected_objects": None, "objects": None})
+    conn = get_db_connection()
+    conn.execute("update user_store set Gold = Gold - ? where ID = ? ",(modifier,user))
+    conn.commit()
+    conn.close()
+    for selected_object in selected_objects:
+        insert_object_and_user(selected_object,user)
+    return {"selected_objects": selected_objects, "objects": objects}
+
+
+@app.post("/select_random_free")
+async def select_random_free(request: Request):
+    today = datetime.now().date()
+    now = datetime.now()
+
+    # Check session for stored selected object and date
+    selected_data = request.session.get('selected_data', {})
+    
+    if selected_data.get("date") == str(today):
+        selected_object = selected_data["selected_object"]
+        time_until_next_day = (datetime.combine(today + timedelta(days=1), datetime.min.time()) - now).total_seconds()
+        return JSONResponse(content={
+            "message": "Free select has already been used today.",
+            "selected_object": selected_object,
+            "time_left": time_until_next_day
+        })
+    else:
+        objects = generate_objects(10)
+        selected_object = random.choice(objects)
+        insert_object_and_user(selected_object,request.session.get["user"])
+        request.session['selected_data'] = {
+            "selected_object": selected_object,
+            "date": str(today)
+        }
+        return {"selected_object": selected_object,"objects":objects}
+    
+
+
+@app.post("/profile", response_class=HTMLResponse)
+@login_required
+async def update_profile(request: Request, description: str = Form(...), password: str = Form(None), confirmation: str = Form(None), file: UploadFile = File(None)):
+    user = request.session.get("user")
+    L = balance_checker(user)
+    L = list(L[0])
+    if password and confirmation:
+        if password != confirmation:
+            er = "Password and Confirmation do not match"
+            return templates.TemplateResponse("profile.html", {"request": request, "user": user, "Error": er, "prompt": 1, "cash": L[0], "cashG": L[1]})
+
+        if not password or not confirmation:
+            er = "Password and Confirmation are Empty"
+            return templates.TemplateResponse("profile.html", {"request": request, "user": user, "Error": er, "prompt": 1, "cash": L[0], "cashG": L[1]})
+
+        password_modifier(user, password)
+
+    if file:
+        file_location = f"static/{user}.jpg"
+        async with aiofiles.open(file_location, 'wb') as f:
+            content = await file.read()
+            await f.write(content)
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET profile_pic = ? WHERE Id = ?", (file_location, user))
+        conn.commit()
+        conn.close()
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET description = ? WHERE Id = ?", (description, user))
+    conn.commit()
+    conn.close()
+
+    return templates.TemplateResponse("profile.html", {"request": request, "user": user, "prompt": 0, "cash": L[0], "cashG": L[1]})
+
+@app.get("/profile", response_class=HTMLResponse)
+@login_required
+async def profile_get(request: Request):
+    user = request.session.get("user")
+    L = balance_checker(user)
+    L = list(L[0])
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT description, profile_pic, Recovery FROM users WHERE Id = ?", (user,))
+    result = cursor.fetchone()
+    conn.close()
+
+    description = result[0]
+    profile_pic = result[1]
+    recovery = result[2]
+
+    return templates.TemplateResponse("profile.html", {"request": request, "user": user, "description": description, "profile_pic": profile_pic, "recovery": recovery, "prompt": 0, "cash": L[0], "cashG": L[1]})

@@ -1,0 +1,16 @@
+{% for i in items %}
+<div class="col-md-6 mb-4">
+    <div class="card shadow-sm h-100">
+        <div class="card-body">
+            <h5 class="card-title">{{ i[1] }}</h5>
+            <p class="card-text">
+                <strong>Rating:</strong> {{ i[4] }}<br>
+                <strong>Price:</strong> {{ i[5] }} G
+            </p>
+            <button class="btn btn-danger btn-block uncart-btn" data-id="{{ i[0] }}" data-type="{{ i[2] }}">
+                <i class="fas fa-times"></i> Uncart
+            </button>
+        </div>
+    </div>
+</div>
+{% endfor %}

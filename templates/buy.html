@@ -6,52 +6,74 @@ Home
 
 {% block main %}
 <div class="container mt-5">
+    <!-- Pricing Banners -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card pricing-banner" data-amount="100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">$100</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card pricing-banner" data-amount="500">
+                <div class="card-body text-center">
+                    <h5 class="card-title">$500</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card pricing-banner" data-amount="1000">
+                <div class="card-body text-center">
+                    <h5 class="card-title">$1000</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card pricing-banner" data-amount="5000">
+                <div class="card-body text-center">
+                    <h5 class="card-title">$5000</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
     <form action="/buy" method="post" class="needs-validation" novalidate>
         <div class="mb-3">
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-user"></i></span>
-                <input autocomplete="off"
-                       autofocus class="form-control"
-                       id="username" name="accountid"
-                       placeholder="ACC_ID"
-                       type="text" required>
+                <input autocomplete="off" autofocus class="form-control" id="username" name="accountid" placeholder="ACC_ID" type="text" required>
                 <div class="invalid-feedback">Please enter your account ID.</div>
             </div>
         </div>
         <div class="mb-3">
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                <input class="form-control"
-                       id="password" name="password"
-                       placeholder="Password"
-                       type="password" required>
+                <input class="form-control" id="password" name="password" placeholder="Password" type="password" required>
                 <div class="invalid-feedback">Please enter your password.</div>
             </div>
         </div>
         <div class="mb-3">
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                <input class="form-control"
-                       id="confirmation" name="confirmation"
-                       placeholder="Password (again)"
-                       type="password" required>
+                <input class="form-control" id="confirmation" name="confirmation" placeholder="Password (again)" type="password" required>
                 <div class="invalid-feedback">Please confirm your password.</div>
             </div>
         </div>
         <div class="mb-3">
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
-                <input class="form-control"
-                       id="amount" name="amount"
-                       placeholder="Amount"
-                       type="number" required>
-                <div class="invalid-feedback">Please enter an amount.</div>
+                <input class="form-control" id="amount" name="amount" placeholder="Amount" type="number" required readonly>
+                <div class="invalid-feedback">Please select an amount.</div>
             </div>
         </div>
         <button class="btn btn-primary w-100" type="submit">
             <i class="fas fa-paper-plane"></i> Transfer
         </button>
     </form>
+
+    <!-- Error/Success Messages -->
     {% if prompt == 1 %}
     <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
         <i class="fas fa-exclamation-triangle"></i> <strong>Error:</strong> {{ Error }}
@@ -67,19 +89,44 @@ Home
 
 <script>
     (function () {
-        'use strict'
-        var forms = document.querySelectorAll('.needs-validation')
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
         Array.prototype.slice.call(forms)
             .forEach(function (form) {
                 form.addEventListener('submit', function (event) {
                     if (!form.checkValidity()) {
-                        event.preventDefault()
-                        event.stopPropagation()
+                        event.preventDefault();
+                        event.stopPropagation();
                     }
 
-                    form.classList.add('was-validated')
-                }, false)
-            })
-    })()
+                    form.classList.add('was-validated');
+                }, false);
+            });
+
+        var pricingBanners = document.querySelectorAll('.pricing-banner');
+        pricingBanners.forEach(function (banner) {
+            banner.addEventListener('click', function () {
+                var amount = this.getAttribute('data-amount');
+                document.getElementById('amount').value = amount;
+
+                pricingBanners.forEach(function (b) {
+                    b.classList.remove('selected');
+                });
+                this.classList.add('selected');
+            });
+        });
+    })();
 </script>
+
+<style>
+    .pricing-banner {
+        cursor: pointer;
+        border: 1px solid #ddd;
+        transition: all 0.3s ease;
+    }
+    .pricing-banner:hover, .pricing-banner.selected {
+        border-color: #007bff;
+        background-color: #f8f9fa;
+    }
+</style>
 {% endblock %}

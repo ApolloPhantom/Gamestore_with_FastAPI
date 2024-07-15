@@ -6,61 +6,123 @@
 
 {% block main %}
 <div class="container mt-3">
-    <h2>Press reload after uncarting to see changes</h2>
-    <table class="table table-hover">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Rating</th>
-          <th>Price in GOLD</th>
-          <th>Cart</th>
-        </tr>
-      </thead>
-      <tbody>
+    <h2 class="mb-4 text-center">Cart Items</h2>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    Transaction Summary
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Final Amount</h5>
+                    <p class="card-text">
+                        <i class="fas fa-coins text-warning"></i>
+                        <span id="final-amount" class="h4 font-weight-bold">{{ cashg }}</span> Gold Coins
+                    </p>
+                </div>
+            </div>
+            <div class="d-grid gap-3">
+                <button class="btn btn-success btn-block" id="checkout-btn">Confirm Purchase with Gold</button>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card" id="random-card">
+                <!-- Random content will be populated here -->
+            </div>
+        </div>
+    </div>
+    <div class="row" id="cart-items">
         {% for i in items %}
-        <tr>
-          <td>{{i[1]}}</td>
-          <td>{{i[4]}}</td>
-          <td>{{i[5]}} G </td>
-          <td>
-            <form action = "/uncart" method="post">
-              <input type = "hidden" name="ID" value = "{{ i[0] }}">
-              <input type = "hidden" name="Type" value = "{{ i[2] }}" >
-              <button class="btn btn-outline-secondary" type="submit">
-                Uncart
-              </button>
-            </form>
-          </td>
-        </tr>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <!-- <img src="{{ i[3] }}" class="card-img-top" alt="{{ i[1] }}"> -->
+                <div class="card-body">
+                    <h5 class="card-title">{{ i[1] }}</h5>
+                    <p class="card-text">
+                        <strong>Rating:</strong> {{ i[4] }}<br>
+                        <strong>Price:</strong> {{ i[5] }} G
+                    </p>
+                    <button class="btn btn-danger btn-block uncart-btn" data-id="{{ i[0] }}" data-type="{{ i[2] }}">
+                        <i class="fas fa-times"></i> Uncart
+                    </button>
+                </div>
+            </div>
+        </div>
         {% endfor %}
-      </tbody>
-      <tfoot>
-        <tr>
-            <td class="border-0 fw-bold text-end" colspan="4">Cash:-</td>
-            <td class="border-0 w-bold text-end">$ {{cash}}</td>
-        </tr>
-        <tr>
-            <td class="border-0 fw-bold text-end" colspan="4">Gold:-</td>
-            <td class="border-0 w-bold text-end">{{cashg}} G</td>
-        </tr>
-    </tfoot>
-    </table>
-  </div>
-  <div class="d-grid gap-3">
-  <form action="/checkout" method="post">
-    <button class= "btn btn-outline-secondary btn-block" type="submit">Confirm Purchase with gold</button>
-  </form>
-  </div>
-  {% if prompt == 1 %}
-<div class="alert alert-danger alert-dismissible">
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    <strong>Error:-</strong>{{ Error }}
+    </div>
+    <div id="alert-container"></div>
 </div>
-  {% elif prompt == 2 %}
-<div class="alert alert-success alert-dismissible">
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    <strong>Error:-</strong>{{ Error }}
-</div>
-{% else %}
-{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const randomTitles = ["Checkout Tip", "Limited Offer", "Hot Deal", "Friendly Reminder"];
+        const randomTexts = ["Remember to check your cart before checkout.", "Don't miss out on this limited offer!", "Hot deal available in your cart!", "Friendly reminder to review your items."];
+        const randomButtonTexts = ["Review Cart", "Get Offer", "See Deal", "Check Now"];
+
+        function getRandomContent() {
+            const title = randomTitles[Math.floor(Math.random() * randomTitles.length)];
+            const text = randomTexts[Math.floor(Math.random() * randomTexts.length)];
+            const buttonText = randomButtonTexts[Math.floor(Math.random() * randomButtonTexts.length)];
+
+            return `
+                <div class="card-header">${title}</div>
+                <div class="card-body">
+                    <h5 class="card-title">${title}</h5>
+                    <p class="card-text">${text}</p>
+                    <a href="#" class="btn btn-warning">${buttonText}</a>
+                </div>
+            `;
+        }
+
+        document.getElementById('random-card').innerHTML = getRandomContent();
+
+        async function updateCart() {
+            try {
+                const response = await axios.get('/cart-data');
+                document.getElementById('cart-items').innerHTML = response.data.items_html;
+                document.getElementById('final-amount').textContent = response.data.cashg;
+            } catch (error) {
+                showAlert('danger', 'Failed to update cart.');
+            }
+        }
+
+        async function handleAction(url, data) {
+            try {
+                const response = await axios.post(url, data, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                updateCart();
+                showAlert('success', response.data.message);
+            } catch (error) {
+                showAlert('danger', error.response.data.message);
+            }
+        }
+
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alert-container');
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible mt-3">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <strong>${type === 'success' ? 'Success:' : 'Error:'}</strong> ${message}
+                </div>
+            `;
+        }
+
+        document.getElementById('cart-items').addEventListener('click', function(event) {
+            if (event.target.closest('.uncart-btn')) {
+                const button = event.target.closest('.uncart-btn');
+                const itemId = button.dataset.id;
+                const itemType = button.dataset.type;
+                handleAction('/uncart', { ID: itemId, Type: itemType });
+            }
+        });
+
+        document.getElementById('checkout-btn').addEventListener('click', function() {
+            handleAction('/checkout', {});
+        });
+    });
+</script>
 {% endblock %}

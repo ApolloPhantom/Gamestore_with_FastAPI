@@ -1,0 +1,179 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Generate Objects
+{% endblock %}
+
+{% block main %}
+<body>
+    <div class="container">
+        <h1 class="my-4 text-center">Generate Objects</h1>
+        <div class="text-center">
+            <button class="btn btn-primary my-3" id="random-select-btn">Randomly Select for {{modifier}} Gold</button>
+            <button class="btn btn-secondary my-3" id="random-select-10-btn">Randomly Select 10 for {{modifier*9}} Gold</button>
+            <button class="btn btn-success my-3" id="random-select-free-btn">Randomly Select Free</button>
+        </div>
+        <div class="row justify-content-center" id="object-container"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        // Function to render objects on the page
+        function renderObjects(objects) {
+            const container = document.getElementById('object-container');
+            container.innerHTML = '';
+            objects.forEach(obj => {
+                const div = document.createElement('div');
+                div.className = `col-md-2 object-card text-center rating-${obj.Rating}`;
+                div.id = `object-${obj.Object_ID}`;
+                div.innerHTML = `
+                    <h5>${obj.Object_Name}</h5>
+                    <p>Type: <i class="fas fa-tag"></i> ${obj.Object_Type}</p>
+                    <p>Rating: ${getRatingStars(obj.Rating)}</p>
+                    <p>Price: <i class="fas fa-dollar-sign"></i> $${obj.Price}</p>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Function to generate stars for ratings
+        function getRatingStars(rating) {
+            const ratelist = {"S":5,"A":4,"B":3,"C":2,"D":"1"};
+            let stars = '';
+            for (let i = 0; i < ratelist[rating]; i++) {
+                stars += '<i class="fas fa-star"></i>';
+            }
+            for (let i = ratelist[rating]; i < 5; i++) {
+                stars += '<i class="far fa-star"></i>';
+            }
+            return stars;
+        }
+
+        // Function to animate highlight
+        async function animateHighlight(objectIDs, finalIDs) {
+            const highlightDuration = 200; // Duration in milliseconds
+            const cycleDuration = 200; // Duration for each cycle in milliseconds
+            const cycles = highlightDuration / cycleDuration; // Number of cycles in the duration
+
+            for (let cycle = 0; cycle < cycles; cycle++) {
+                for (let id of objectIDs) {
+                    document.querySelectorAll('.object-card').forEach(card => card.classList.remove('highlight'));
+                    document.getElementById(id).classList.add('highlight');
+                    await new Promise(resolve => setTimeout(resolve, cycleDuration));
+                }
+            }
+
+            document.querySelectorAll('.object-card').forEach(card => card.classList.remove('highlight'));
+            finalIDs.forEach(id => {
+                document.getElementById(id).classList.add('highlight');
+            });
+        }
+
+        // Event listener for random select button
+        document.getElementById('random-select-btn').addEventListener('click', async function () {
+            const response = await axios.post('/select_random');
+            const { selected_object, objects,error } = response.data;
+            if(error){
+                alert(error);
+            }
+            else{
+            renderObjects(objects);
+            const objectIDs = objects.map(obj => `object-${obj.Object_ID}`);
+            const finalID = [`object-${selected_object.Object_ID}`];
+            animateHighlight(objectIDs, finalID);
+            
+            }
+        });
+
+        // Event listener for random select 10 button
+        document.getElementById('random-select-10-btn').addEventListener('click', async function () {
+            const response = await axios.post('/select_random_10');
+            const { selected_objects, objects,error } = response.data;
+            if(error){
+                alert(error);
+            }
+            else{
+            renderObjects(objects);
+            const objectIDs = objects.map(obj => `object-${obj.Object_ID}`);
+            const finalIDs = selected_objects.map(obj => `object-${obj.Object_ID}`);
+            animateHighlight(objectIDs, finalIDs);
+            setTimeout(location.reload(),2000);
+            }
+        });
+
+        document.getElementById('random-select-free-btn').addEventListener('click', async function () {
+            const response = await axios.post('/select_random_free');
+            const { selected_object, time_left, message,objects } = response.data;
+        
+            if (message) {
+                alert(`${message} Time left for next free spin: ${Math.ceil(time_left / 3600)} hours ${Math.ceil((time_left % 3600) / 60)} minutes.`);
+            } else {
+                renderObjects(objects);
+                const objectIDs = objects.map(obj => `object-${obj.Object_ID}`);
+                const finalID = [`object-${selected_object.Object_ID}`];
+                animateHighlight(objectIDs, finalID);
+                setTimeout(location.reload(),2000);
+            }
+        });
+    </script>
+
+    <style>
+        .object-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;  
+        }
+        .object-card {
+            margin: 10px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .object-card h5 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        .object-card p {
+            margin: 5px 0;
+        }
+        .object-card.rating-S {
+            border-radius: 50%;
+            border: 30px solid #ff0000;
+        }
+        
+        .object-card.rating-A {
+            border-radius: 30%;
+            border: 30px solid #ff8000;
+        }
+        
+        .object-card.rating-B {
+            border-radius: 40%;
+            border: 30px solid #ff6600;
+        }
+        .object-card.rating-C {
+            border-radius: 20%;
+            border: 30px solid #ff9933;
+        }
+        .object-card.rating-D {
+            border-radius: 10%;
+            border: 30px solid #ffcc00;
+        }
+        .object-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .highlight {
+            background-color: yellow;
+            border-color: blue;
+            border-style: solid;
+        }
+        .fas, .far {
+            color: #ffd700;
+        }
+    </style>
+</body>
+{% endblock %}

@@ -6,37 +6,152 @@
 
 {% block main %}
 <div class="container mt-3">
-    <table class="table table-hover table-striped table-bordered" style="background-color: white;">
-        <thead class="thead-dark">
-            <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Rating</th>
-                <th>Price in GOLD</th>
-                <th>Cart</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for i in items %}
-            <tr>
-                <td style="background-color: white;">{{ i[1] }}</td>
-                <td style="background-color: white;">{{ i[2] }}</td>
-                <td style="background-color: white;">{{ i[4] }}</td>
-                <td style="background-color: white;">{{ i[5] }} G</td>
-                <td style="background-color: white;">
+    <h2 class="mb-4 text-center">My Items</h2>
+    <div class="row" id="items-container">
+        {% for i in items %}
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ i[1] }}</h5>
+                    <p class="card-text">
+                        <strong>Type:</strong> {{ i[2] }}<br>
+                        <strong>Rating:</strong> {{ i[4] }}<br>
+                        <strong>Price:</strong> {{ i[5] }} G
+                    </p>
                     {% if i[3] == "UL" %}
-                    <a href="{{ url_for('lister_user', ID=i[0]) }}" class="btn btn-success">
-                        <i class="fas fa-list"></i> List
-                    </a>
+                    <form class="list-form" action="{{ url_for('lister_user', ID=i[0]) }}" method="post">
+                        <button type="submit" class="btn btn-success btn-block">
+                            <i class="fas fa-list"></i> List
+                        </button>
+                    </form>
+                    <form class="purge-form" action="{{ url_for('scatter_purge', ID=i[0]) }}" method="post">
+                        <button type="submit" class="btn btn-danger btn-block">
+                            <i class="fas fa-times"></i> Purge
+                        </button>
+                    </form>
                     {% else %}
-                    <a href="{{ url_for('unlister_user', ID=i[0]) }}" class="btn btn-danger">
-                        <i class="fas fa-times"></i> UnList
-                    </a>
+                    <form class="unlist-form" action="{{ url_for('unlister_user', ID=i[0]) }}" method="post">
+                        <button type="submit" class="btn btn-danger btn-block">
+                            <i class="fas fa-times"></i> UnList
+                        </button>
+                    </form>
                     {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card" id="random-card">
+                <!-- Random content will be populated here -->
+            </div>
+        </div>
+    </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const randomTitles = ["Item Management Tip", "Special Offer", "Hot Item", "Did You Know?"];
+        const randomTexts = ["Learn how to effectively manage your items.", "Special offer just for you!", "Check out this hot item!", "Interesting fact about your items!"];
+        const randomButtonTexts = ["Learn More", "Get Offer", "View Item", "Find Out"];
+
+        function getRandomContent() {
+            const title = randomTitles[Math.floor(Math.random() * randomTitles.length)];
+            const text = randomTexts[Math.floor(Math.random() * randomTexts.length)];
+            const buttonText = randomButtonTexts[Math.floor(Math.random() * randomButtonTexts.length)];
+
+            return `
+                <div class="card-header">${title}</div>
+                <div class="card-body">
+                    <h5 class="card-title">${title}</h5>
+                    <p class="card-text">${text}</p>
+                    <a href="#" class="btn btn-info">${buttonText}</a>
+                </div>
+            `;
+        }
+
+        document.getElementById('random-card').innerHTML = getRandomContent();
+
+        // Function to handle AJAX requests with Axios
+        function handleAction(url, callback, formData) {
+            axios.post(url, formData, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => callback(response.data))
+            .catch(error => {
+                if (error.response) {
+                    // Display the error message
+                    alert(error.response.data.error || 'An error occurred.');
+                } else {
+                    console.error('Error:', error);
+                }
+            });
+        }
+
+        // Add event listeners for the list, unlist, and purge forms
+        document.querySelectorAll('.list-form, .unlist-form, .purge-form').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const url = this.action;
+                const formData = new FormData(this);
+                handleAction(url, updateItems, formData);
+            });
+        });
+
+        // Function to update items without reloading the page
+        function updateItems(data) {
+            const itemsContainer = document.getElementById('items-container');
+            itemsContainer.innerHTML = '';
+
+            data.items.forEach(item => {
+                const itemHTML = `
+                    <div class="col-md-6 mb-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">${item[1]}</h5>
+                                <p class="card-text">
+                                    <strong>Type:</strong> ${item[2]}<br>
+                                    <strong>Rating:</strong> ${item[4]}<br>
+                                    <strong>Price:</strong> ${item[5]} G
+                                </p>
+                                ${item[3] == "UL" ? 
+                                    `<form class="list-form" action="/list/${item[0]}" method="post">
+                                        <button type="submit" class="btn btn-success btn-block">
+                                            <i class="fas fa-list"></i> List
+                                        </button>
+                                    </form>
+                                    <form class="purge-form" action="/scatter/${item[0]}" method="post">
+                                        <button type="submit" class="btn btn-danger btn-block">
+                                            <i class="fas fa-times"></i> Purge
+                                        </button>
+                                    </form>` :
+                                    `<form class="unlist-form" action="/unlist/${item[0]}" method="post">
+                                        <button type="submit" class="btn btn-danger btn-block">
+                                            <i class="fas fa-times"></i> UnList
+                                        </button>
+                                    </form>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+                itemsContainer.insertAdjacentHTML('beforeend', itemHTML);
+            });
+
+            // Re-attach event listeners to new forms
+            document.querySelectorAll('.list-form, .unlist-form, .purge-form').forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    const url = this.action;
+                    const formData = new FormData(this);
+                    handleAction(url, updateItems, formData);
+                });
+            });
+        }
+    });
+</script>
 {% endblock %}

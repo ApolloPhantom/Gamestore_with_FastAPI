@@ -6,29 +6,65 @@
 
 {% block main %}
 <div class="container mt-3">
-    <table class="table table-hover table-striped table-bordered" style="background-color: white;">
-        <thead class="thead-dark">
-            <tr>
-                <th>Name</th>
-                <th>Rating</th>
-                <th>Price in GOLD</th>
-                <th>Cart</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for i in items %}
-            <tr>
-                <td style="background-color: white;">{{ i[1] }}</td>
-                <td style="background-color: white;">{{ i[4] }}</td>
-                <td style="background-color: white;">{{ i[5] }} G</td>
-                <td style="background-color: white;">
-                    <a href="{{ url_for('object_cart', ID=i[0], Type=i[2]) }}" class="btn btn-primary">
-                        <i class="fas fa-cart-plus"></i> Cart
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <h2 class="mb-4 text-center">Available Items</h2>
+    <div id="item-container" class="row">
+        {% for i in items %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ i[1] }}</h5>
+                    <p class="card-text">
+                        <strong>Rating:</strong> {{ i[4] }}<br>
+                        <strong>Price:</strong> {{ i[5] }} G
+                    </p>
+                    <button onclick="addToCart( '{{ i[0] }}'  , '{{ i[2] }}')" class="btn btn-primary btn-block">
+                        <i class="fas fa-cart-plus"></i> Add to Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    function addToCart(ID, Type) {
+        ID = parseInt(ID);
+        axios.post(`/CCart/${ID}/${Type}`)
+            .then(response => {
+                if (response.status === 200) {
+                    const items = response.data.items;
+                    const itemContainer = document.getElementById('item-container');
+                    itemContainer.innerHTML = '';
+                    items.forEach(i => {
+                        const itemHtml = `
+                            <div class="col-md-4 mb-4">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${i[1]}</h5>
+                                        <p class="card-text">
+                                            <strong>Rating:</strong> ${i[4]}<br>
+                                            <strong>Price:</strong> ${i[5]} G
+                                        </p>
+                                        <button onclick="addToCart(${i[0]}, '${i[2]}')" class="btn btn-primary btn-block">
+                                            <i class="fas fa-cart-plus"></i> Add to Cart
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        itemContainer.insertAdjacentHTML('beforeend', itemHtml);
+                    });
+                }
+            })
+            .catch(error => {
+                if (error.response && error.response.data.error) {
+                    alert(error.response.data.error);
+                } else {
+                    console.error('There was an error!', error);
+                }
+            });
+    }
+</script>
 {% endblock %}
