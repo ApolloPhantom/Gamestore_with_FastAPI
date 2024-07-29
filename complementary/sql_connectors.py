@@ -81,7 +81,7 @@ def register_helper(username,password,confirmation):
         q = cur.fetchall()
         if len(q) == 0:
             break
-    cur.execute("Insert into users values(?,?,?,?)",(Id,username,password,ran,))
+    cur.execute("Insert into users values(?,?,?,?,?,?)",(Id,username,password,ran,"","",))
     cur.execute("Insert into user_store values(?,?,?)",(Id,0,10000,))
     conn.commit()
     conn.close()
@@ -503,32 +503,6 @@ def get_last7days_data():
 def get_connection():
     return sqlite3.connect(db_path)
 
-# def insert_object_and_user(obj, user_id):
-#     conn = get_db_connection()
-#     cursor = conn.cursor()
-#     cursor.execute("SELECT 1 FROM object WHERE Object_ID = ?", (obj["Object_ID"],))
-#     if cursor.fetchone() is not None:
-#         cursor.execute("SELECT max(Object_ID) FROM object")
-#         r = cursor.fetchone()
-#         cursor.execute("SELECT min(Object_ID) FROM object")
-#         l = cursor.fetchone()
-#         if l[0] > 1:
-#             obj["Object_ID"] = l[0] - 1
-#         else:
-#             obj["Object_ID"] = r[0] + 1
-
-#     cursor.execute(
-#         "INSERT INTO object (Object_ID, Object_Name, Object_type, listing, rating, price) VALUES (?, ?, ?, ?, ?, ?)",
-#         (obj["Object_ID"], obj["Object_Name"], obj["Object_Type"], obj["Listing"], obj["Rating"], obj["Price"])
-#     )
-#     cursor.execute(
-#         "INSERT INTO object_user (Object_ID, Id) VALUES (?, ?)",
-#         (obj["Object_ID"], user_id)
-#     )
-
-#     conn.commit()
-#     conn.close()
-
 def insert_object_and_user(obj, user_id):
     try:
         conn = get_db_connection()
@@ -675,4 +649,12 @@ def execute_sql_query(query: str) -> List[Dict[str, Any]]:
         print(f"Error: {e}")
         return ["Error"]
 
-
+def execute(command):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute(command)
+    res = cursor.fetchall()
+    conn.commit()  # Ensure any changes made by the command are saved
+    cursor.close()
+    conn.close()
+    return  res

@@ -121,12 +121,40 @@
             .then(data => {
                 const resultDiv = document.getElementById('sql-result');
                 if (data.status === 'success') {
-                    resultDiv.innerHTML = '<div class="alert alert-success"><pre>' + JSON.stringify(data.result, null, 2) + '</pre></div>';
+                    resultDiv.innerHTML = '<div class="alert alert-success">' + createTable(data.result) + '</div>';
                 } else {
                     resultDiv.innerHTML = '<div class="alert alert-danger">' + data.result + '</div>';
                 }
+            })
+            .catch(error => {
+                const resultDiv = document.getElementById('sql-result');
+                resultDiv.innerHTML = '<div class="alert alert-danger">Error: ' + error.message + '</div>';
             });
         });
+        
+        function createTable(data) {
+            if (data.length === 0) return '<p>No results found.</p>';
+        
+            // Create table headers
+            let table = '<table class="table"><thead><tr>';
+            const headers = Object.keys(data[0]);
+            headers.forEach(header => {
+                table += `<th>${header}</th>`;
+            });
+            table += '</tr></thead><tbody>';
+        
+            // Create table rows
+            data.forEach(row => {
+                table += '<tr>';
+                headers.forEach(header => {
+                    table += `<td>${row[header]}</td>`;
+                });
+                table += '</tr>';
+            });
+        
+            table += '</tbody></table>';
+            return table;
+        }
     });
 </script>
 {% endblock %}

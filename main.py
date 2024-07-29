@@ -358,48 +358,6 @@ async def scatter_purge(request: Request, ID: int):
 
     return JSONResponse({"items": items, "cash": L[0], "cashG": L[1]})
 
-
-# @app.get("/admin", response_class=HTMLResponse)
-# async def admin_dashboard(request: Request):
-#     user = request.session.get("user")
-#     L = balance_checker(user)
-#     L = list(L[0])
-#     return templates.TemplateResponse("admin_dashboard.html", {"request": request, "user": user, "cash": L[0], "cashG": L[1]})
-
-# @app.post("/admin/execute-sql")
-# async def execute_sql(request: Request):
-#     body = await request.json()
-#     command = body.get("command")
-#     result = execute_sql_command(command)
-#     return JSONResponse(result)
-
-# @app.get("/admin/category-count-data")
-# async def category_count_data(request: Request):
-#     data = get_category_count_data()
-#     categories = [row["Object_type"] for row in data]
-#     counts = [row["count"] for row in data]
-#     return {"categories": categories, "counts": counts}
-
-# @app.get("/admin/cumulative-data")
-# async def cumulative_data(request: Request):
-#     data = get_cumulative_data()
-#     dates = [row["Purchase_Date"] for row in data]
-#     prices = [row["Total_Price"] for row in data]
-#     cumulative_prices = []
-#     cumulative_sum = 0
-#     for price in prices:
-#         cumulative_sum += price
-#         cumulative_prices.append(cumulative_sum)
-#     return {"dates": dates, "cumulativePrices": cumulative_prices}
-
-# @app.get("/admin/last7days-data")
-# async def last7days_data(request: Request):
-#     data = get_last7days_data()
-#     dates = [row["Purchase_Date"] for row in data]
-#     prices = [row["Total_Price"] for row in data]
-#     return {"dates": dates, "prices": prices}
-
-
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_dashboard(request: Request):
     user = request.session.get("user")
@@ -411,8 +369,13 @@ async def admin_dashboard(request: Request):
 async def execute_sql(request: Request):
     body = await request.json()
     command = body.get("command")
-    result = execute_sql_command(command)
-    return JSONResponse(result)
+    if not command:
+        return JSONResponse({"status": "error", "result": "No SQL command provided"}, status_code=400)
+    try:
+        result = execute(command)
+        return JSONResponse({"status": "success", "result": result})
+    except Exception as e:
+        return JSONResponse({"status": "error", "result": str(e)}, status_code=500)
 
 @app.get("/admin/items-per-rating")
 async def items_per_rating(request: Request):
@@ -466,7 +429,9 @@ async def select_random(request: Request):
     conn.commit()
     conn.close()
     insert_object_and_user(selected_object,user)
-    return {"selected_object": selected_object, "objects": objects}
+    L = balance_checker(user)
+    L = list(L[0])
+    return {"selected_object": selected_object, "objects": objects,"cash": L[0], "cashG": L[1]}
 
 @app.post("/select_random_10")
 async def select_random_10(request: Request):
@@ -484,7 +449,9 @@ async def select_random_10(request: Request):
     conn.close()
     for selected_object in selected_objects:
         insert_object_and_user(selected_object,user)
-    return {"selected_objects": selected_objects, "objects": objects}
+    L = balance_checker(user)
+    L = list(L[0])
+    return {"selected_objects": selected_objects, "objects": objects,"cash": L[0], "cashG": L[1]}
 
 
 @app.post("/select_random_free")

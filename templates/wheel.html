@@ -70,15 +70,21 @@
             });
         }
 
+        function updateBalance(cash, cashG) {
+            document.getElementById('cash').innerText = cash;
+            document.getElementById('cashG').innerText = cashG;
+        }
+
         // Event listener for random select button
         document.getElementById('random-select-btn').addEventListener('click', async function () {
             const response = await axios.post('/select_random');
-            const { selected_object, objects,error } = response.data;
+            const { selected_object, objects,cash, cashG,error } = response.data;
             if(error){
                 alert(error);
             }
             else{
             renderObjects(objects);
+            updateBalance(cash, cashG);
             const objectIDs = objects.map(obj => `object-${obj.Object_ID}`);
             const finalID = [`object-${selected_object.Object_ID}`];
             animateHighlight(objectIDs, finalID);
@@ -89,12 +95,13 @@
         // Event listener for random select 10 button
         document.getElementById('random-select-10-btn').addEventListener('click', async function () {
             const response = await axios.post('/select_random_10');
-            const { selected_objects, objects,error } = response.data;
+            const { selected_objects, objects,cash, cashG,error } = response.data;
             if(error){
                 alert(error);
             }
             else{
             renderObjects(objects);
+            updateBalance(cash, cashG);
             const objectIDs = objects.map(obj => `object-${obj.Object_ID}`);
             const finalIDs = selected_objects.map(obj => `object-${obj.Object_ID}`);
             animateHighlight(objectIDs, finalIDs);
